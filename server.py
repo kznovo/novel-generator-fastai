@@ -7,6 +7,7 @@ from fastai.text.transform import BaseTokenizer
 from fastai.basic_train import load_learner
 from starlette.applications import Starlette
 from starlette.responses import PlainTextResponse
+from starlette.middleware.cors import CORSMiddleware
 
 if __name__ == "__main__":
 
@@ -30,6 +31,7 @@ if __name__ == "__main__":
 
     learner = load_learner(path="/app", file="model.pkl")
     app = Starlette()
+    app.add_middleware(CORSMiddleware, allow_origins=['*'])
 
     @app.route("/")
     async def index(request):
