@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <link
+      rel="stylesheet"
+      href="//fonts.googleapis.com/css?family=Merriweather|Sawarabi+Mincho"
+    />
+
+    <style>
+      body {
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
+        margin: auto;
+        padding: 2%;
+        max-width: 45rem;
+      }
+      #string {
+        font-family: 'Sawarabi Mincho', sans-serif;
+        font-size: 120%;
+        padding: 1%;
+        margin: 1%;
+        width: 70%;
+        border: none;
+        border-bottom: 2px ridge wheat;
+      }
+      #n_words {
+        font-family: 'Sawarabi Mincho', sans-serif;
+        font-size: 120%;
+        padding: 1%;
+        margin: 1%;
+        width: 20%;
+      }
+      #submit {
+        border: 1px solid wheat;
+        border-radius: 5px;
+        font-size: 120%;
+        padding: 1%;
+        margin: 1%;
+        font-family: 'Sawarabi Mincho', sans-serif;
+        width: 100%;
+      }
+      #submit:hover {
+        background-color: bisque;
+        cursor: pointer;
+        transition: 0.3s;
+      }
+    </style>
+    <title>Novel Generator</title>
+  </head>
+  <body>
+    <small><a href="//kznovo.github.io"><< Back to kznovo.github.io</a></small>
+    <h1>Novel Generator (江戸川乱歩ジェネレータ)</h1>
+
+    <div>
+      <input
+        type="text"
+        name="string"
+        id="string"
+        placeholder="小説の書き出し・・・"
+      />
+      <input
+        type="number"
+        name="n_words"
+        id="n_words"
+        min="1"
+        max="100"
+        placeholder="＋追加文字数"
+      />
+      <button id="submit">小説を続ける</button>
+    </div>
+
+    <p id="result"></p>
+    <script>
+      const string = document.getElementById('string');
+      const result = document.getElementById('result');
+      const n_words = document.getElementById('n_words');
+
+      string.addEventListener('input', () => {
+        result.innerText = string.value;
+      });
+
+      document.getElementById('submit').addEventListener('click', () => {
+        const uri_base = `http://192.168.3.5`;
+        const params = `?string=${string.value}&n_words=${n_words.value}`;
+        const preds = fetch(uri_base + params)
+          .then(res => res.text())
+          .catch(err => alert(err));
+        result.innerText = preds;
+      });
+    </script>
+  </body>
+</html>
