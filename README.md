@@ -1,1 +1,1 @@
-https://kznovo.github.io/novel-generator-fastai
+http://kznovo.github.io/novel-generator-fastai
