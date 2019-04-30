@@ -12,4 +12,5 @@ WORKDIR /app
 COPY . .
 RUN pip install -r requirements.txt
 EXPOSE 5001
+ENV MODEL_PATH=/app/model.pkl
 ENTRYPOINT ["python", "server.py"]

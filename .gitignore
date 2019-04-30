@@ -1,2 +1,4 @@
 *.pkl
 .mypy_cache
+venv
+.vscode
