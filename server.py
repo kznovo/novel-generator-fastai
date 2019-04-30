@@ -41,7 +41,7 @@ if __name__ == "__main__":
         trimmed = preds.replace(" ", "").replace("xxbos", "")
         return PlainTextResponse(trimmed)
 
-    cfg_mapping = {"bind": "0.0.0.0:5000", "access_log_target": "-"}
+    cfg_mapping = {"bind": "0.0.0.0:5001", "access_log_target": "-"}
     config = Config.from_mapping(cfg_mapping)
     asyncio.run(serve(app, config))
 

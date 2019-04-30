@@ -11,5 +11,5 @@ RUN mkdir /app
 WORKDIR /app
 COPY . .
 RUN pip install -r requirements.txt
-EXPOSE 5000
+EXPOSE 5001
 ENTRYPOINT ["python", "server.py"]
