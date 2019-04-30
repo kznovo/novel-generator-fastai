@@ -8,16 +8,34 @@
       rel="stylesheet"
       href="//fonts.googleapis.com/css?family=Merriweather|Sawarabi+Mincho"
     />
-
+    <link
+      rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/styles/default.min.css"
+    />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.15.6/highlight.min.js"></script>
+    <script>
+      hljs.initHighlightingOnLoad();
+    </script>
     <style>
       body {
         font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
+        font-size: 120%;
         margin: auto;
         padding: 2%;
         max-width: 45rem;
       }
+      table {
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
+        border-collapse: collapse;
+      }
+      table,
+      th,
+      td {
+        border: 1px solid gray;
+        font-size: 50%;
+      }
       #string {
-        font-family: 'Sawarabi Mincho', sans-serif;
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
         font-size: 120%;
         padding: 1%;
         margin: 1%;
@@ -26,25 +44,35 @@
         border-bottom: 2px ridge wheat;
       }
       #n_words {
-        font-family: 'Sawarabi Mincho', sans-serif;
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
         font-size: 120%;
         padding: 1%;
         margin: 1%;
         width: 20%;
       }
       #submit {
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
+        font-size: 120%;
         border: 1px solid wheat;
         border-radius: 5px;
-        font-size: 120%;
         padding: 1%;
         margin: 1%;
-        font-family: 'Sawarabi Mincho', sans-serif;
         width: 100%;
       }
       #submit:hover {
         background-color: bisque;
         cursor: pointer;
         transition: 0.3s;
+      }
+      .result {
+        width: 100%;
+        padding: 2%;
+        min-height: 100px;
+      }
+      #result {
+        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
+        font-size: 120%;
+        margin: 10% 0%;
       }
     </style>
     <title>Novel Generator</title>
@@ -71,7 +99,422 @@
       <button id="submit">小説を続ける</button>
     </div>
 
-    <p id="result"></p>
+    <div class="result">
+      <p id="result"></p>
+    </div>
+
+    <hr />
+    <h2>About</h2>
+    <p>Playing around with fast.ai text API.</p>
+    <p>
+      I scraped Edogawa Ranpo (江戸川乱歩) novels from
+      <a
+        href="https://www.aozora.gr.jp/index_pages/person1779.html"
+        target="_blank"
+        rel="noopener noreferrer"
+        >aozora bunko (青空文庫)</a
+      >.
+    </p>
+    <ul>
+      <li>
+        <a href="//github.com/kznovo/novel-generator-fastai"
+          >Source of this page (GitHub)</a
+        >
+      </li>
+      <li>
+        <a href="//docs.fast.ai/index.html">fast.ai</a>
+      </li>
+    </ul>
+    <hr />
+    <h2>Inplementation</h2>
+    <p>Scraping aozora bunko was the most difficult part.</p>
+    <p>Fastai supports many useful utils out of the box. For example,</p>
+    <pre><code class="python">
+from fastai import *
+from fastai.text import *
+    </code></pre>
+    <p>
+      this already added the
+      <a
+        href="http://docs.python-requests.org"
+        target="_blank"
+        rel="noopener noreferrer"
+        >requests</a
+      >
+      library in scope.
+    </p>
+    <p>
+      This time I'm also using
+      <a
+        href="https://www.crummy.com/software/BeautifulSoup/bs4/doc/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >beautiful soup</a
+      >
+      for html parsing so I'm going to import that too.
+    </p>
+    <pre><code class="python">
+from bs4 import BeautifulSoup
+    </code></pre>
+
+    <p>
+      Now I'm getting the top page of aozora bunko where they list all the links
+      to the novel pages by Edogawa.
+    </p>
+    <pre><code class="python">
+base_path = "https://www.aozora.gr.jp/"
+page = requests.get(base_path + "index_pages/person1779.html")
+    </code></pre>
+
+    <p>I'm using beautiful soup to</p>
+    <ol>
+      <li>find all a tags with href attribute that starts with "../cards"</li>
+      <li>access that path and again find the right html page</li>
+      <li>extract the main contents from the page</li>
+    </ol>
+    <pre><code class="python">
+soup = BeautifulSoup(page.text, 'html')
+texts = []
+for a in soup.find_all("a"):
+    href = a.get("href")
+    if isinstance(href, str) and href.startswith("../cards"):
+        tmp_path = base_path + "/".join(href.split("/")[1:])
+        tmp_page = requests.get(tmp_path)
+        tmp_soup = BeautifulSoup(tmp_page.text, "html.parser")
+        for tmp_a in tmp_soup.find_all("a"):
+            tmp_href = tmp_a.get("href")
+            if (
+                isinstance(tmp_href, str) and
+                tmp_href.startswith("./files") and
+                tmp_href.endswith(".html")
+            ):
+                source_path = "/".join(tmp_path.split("/")[:-1] + [tmp_href[2:]])
+                source_page = requests.get(source_path)
+                source_page.encoding = "shift-jis"
+                source_soup = BeautifulSoup(source_page.text, "html.parser")
+                text = (
+                    source_soup
+                    .find("div", {"class": "main_text"})
+                    .text
+                    .strip()
+                    .replace("\n", "")
+                    .replace("\r", "")
+                    .replace("\u3000", "")
+                )
+                texts.append(text)
+    </code></pre>
+    <p>
+      Finally I cut up the novels by the periods ("。") and store them into a
+      pandas dataframe.
+    </p>
+    <pre><code class="python">
+splitted_texts = [ts + "。" for t in texts for ts in t.split("。")]
+df = pd.DataFrame(splitted_texts).drop_duplicates().reset_index(drop=True)
+    </code></pre>
+
+    <p>
+      Then comes the fast.ai part. First, I create a
+      <a
+        href="http://taku910.github.io/mecab/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >MeCab</a
+      >
+      based tokenizer that extends fast.ai's
+      <a
+        href="https://docs.fast.ai/text.transform.html#BaseTokenizer"
+        target="_blank"
+        rel="noopener noreferrer"
+        >BaseTokenizer class</a
+      >
+      to perform tokenization on Japanese texts.
+    </p>
+    <pre><code class="python">
+import re
+import MeCab
+
+tagger = MeCab.Tagger("-Owakati")
+
+class MeCabTokenizer(BaseTokenizer):
+    def __init__(self, lang:str):
+        self.lang = 'ja'
+    
+    def add_special_cases(self, toks:Collection[str]): pass
+    
+    def tokenizer(self,raw_sentence):
+        result = tagger.parse(raw_sentence)
+        words = result.split()
+        if len(words) == 0:
+            return []
+        if words[-1] == "\n":
+            words = words[:-1]
+        return words
+    </code></pre>
+
+    <p>
+      Then I'll use the tokenizer and set up a
+      <a
+        href="https://docs.fast.ai/basic_data.html#DataBunch"
+        target="_blank"
+        rel="noopener noreferrer"
+        >databunch object</a
+      >
+      using the
+      <a
+        href="https://docs.fast.ai/text.data.html#The-TextList-input-classes"
+        target="_blank"
+        rel="noopener noreferrer"
+        >TextList input class</a
+      >. This is basically how fast.ai treats data within their api.
+    </p>
+
+    <pre><code class="python">
+tokenizer = Tokenizer(MeCabTokenizer, 'ja')
+processor = [TokenizeProcessor(tokenizer=tokenizer), NumericalizeProcessor(max_vocab=60000,min_freq=2)]
+
+data_lm = (
+    TextList
+    .from_df(df,Path("data"),cols=[0],processor=processor)
+    .split_by_rand_pct(0.1)
+    .label_for_lm()
+    .databunch(bs=64)
+)
+    </code></pre>
+
+    <pre><code class="python">
+data_lm.show_batch()
+    </code></pre>
+
+    <table class="dataframe">
+      <thead>
+        <tr style="text-align: right;">
+          <th>idx</th>
+          <th>text</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>
+            歩い て い まし た 。 xxbos 三 人 とも 、 小学校 三 年生 の なかよし
+            です 。 xxbos 「 あらっ 。 xxbos 」 サト子 ちゃん が 、 なに を 見
+            た の か 、 ぎょっと し た よう に たちどまり まし た 。 xxbos
+            ミドリ ちゃん も サユリ ちゃん も びっくり し て 、 サト子 ちゃん の
+            見つめ て いる 方 を ながめ まし た 。 xxbos する と
+          </td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>
+            やって来 た の です よ 。 xxbos 例 の カフェ・アトランチス の 件 で
+            至急 に 会い たい という の です 。 xxbos 態 々 （ わざわざ ）
+            こんな ところ まで 追っかけ て くる 程 だ から 、 恐らく 何 か
+            大きな 手掛り を 掴ん だ の でしょ う 。 xxbos あの 手紙 を 白紙 と
+            すり 換え た 奴 が 分っ た かも 知れ ませ ん 」 「 それ は
+          </td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>
+            部屋 の 奥 の 方 に 、 何者 か が 深夜 の 会合 を し て いる の で
+            は ある まい か 。 xxbos xxunk 共 か 。 xxbos まさか xxunk そんな
+            もの が 、 人里 近い この 辺 に xxunk で いる 筈 も ない 。 xxbos で
+            は 、 山 の 奥 から さまよい 出し た 谺 （ こだま ） の 精 、 老樹
+            の 精 、
+          </td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>
+            いる 。 xxbos だ が 、 君 の 口 から 詳しい 話 が 聞き たい もん だ
+            ね 」 「 無論 話す が ね 。 xxbos それ より も 、 ここ に いい もの
+            が ある ん だ 。 xxbos 僕 個人 の 捜査 日記 だ よ 。 xxbos 君 に
+            読ん で 貰お う と 思っ て 持っ て 来 た の だ 。 xxbos 口 で 云う
+            より
+          </td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>
+            なかっ た 。 xxbos 彼 は 寝床 から 手 を 伸し て 、 窓 の 戸 を 半分
+            だけ 開け て 置い て 、 蒲団 （ ふとん ） の 中 に 腹ばい に なっ た
+            まま 、 煙草 を 吸い 始め た 。 xxbos 「 昨夜 （ ゆうべ ） は 、 己
+            （ おれ ） は ちと どうか し て い た わい 。 xxbos 安来 節 が 過ぎ
+            た
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      That's it! I can create a model and feed this object in. So first I create
+      a model:
+    </p>
+
+    <pre><code class="python">
+learn = language_model_learner(data_lm, AWD_LSTM, pretrained=False)
+    </code></pre>
+
+    <p>Find the optimal learning rate:</p>
+
+    <pre><code class="python">
+learn.lr_find()
+learn.recorder.plot()
+    </code></pre>
+    <img src="lr.png" alt="learning rate" />
+
+    <p>And fit.</p>
+
+    <pre><code class="python">
+learn.unfreeze()
+learn.fit_one_cycle(16, 1e-02)
+    </code></pre>
+    <table class="dataframe">
+      <thead>
+        <tr style="text-align: left;">
+          <th>epoch</th>
+          <th>train_loss</th>
+          <th>valid_loss</th>
+          <th>accuracy</th>
+          <th>time</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td>4.507823</td>
+          <td>4.334403</td>
+          <td>0.316128</td>
+          <td>01:38</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>3.803796</td>
+          <td>3.680052</td>
+          <td>0.382662</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>3.522720</td>
+          <td>3.444266</td>
+          <td>0.403864</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>3.423434</td>
+          <td>3.347921</td>
+          <td>0.411120</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>3.347341</td>
+          <td>3.291305</td>
+          <td>0.417679</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>5</td>
+          <td>3.279663</td>
+          <td>3.247730</td>
+          <td>0.423628</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>6</td>
+          <td>3.216730</td>
+          <td>3.208911</td>
+          <td>0.426489</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>7</td>
+          <td>3.138893</td>
+          <td>3.176067</td>
+          <td>0.431173</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>8</td>
+          <td>3.067047</td>
+          <td>3.145211</td>
+          <td>0.436084</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>9</td>
+          <td>2.992936</td>
+          <td>3.113955</td>
+          <td>0.440698</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>10</td>
+          <td>2.916804</td>
+          <td>3.091572</td>
+          <td>0.444655</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>11</td>
+          <td>2.840940</td>
+          <td>3.072649</td>
+          <td>0.447346</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>12</td>
+          <td>2.766437</td>
+          <td>3.061572</td>
+          <td>0.449103</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>13</td>
+          <td>2.705637</td>
+          <td>3.056961</td>
+          <td>0.450885</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>14</td>
+          <td>2.663790</td>
+          <td>3.055644</td>
+          <td>0.451035</td>
+          <td>01:39</td>
+        </tr>
+        <tr>
+          <td>15</td>
+          <td>2.642250</td>
+          <td>3.056106</td>
+          <td>0.450893</td>
+          <td>01:39</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>Now I can generate novels in Edogawa Ranpo fashion.</p>
+
+    <pre><code class="python">
+learn.predict("二十面相", n_words=50)
+    </code></pre>
+    <pre><code class="plaintext">
+'二十面相 の やろ う は 、 三 百 三 十 センチ ぐらい しか ない ので 、 あいつ は 学校 に つく つもり だ 。 xxbos それ に 玉村 銀 一 君 は かくれ て しまっ た の です 。 xxbos そして 、 もし その 方法 が 、 それ が きっかけ に'
+    </code></pre>
+
+    <p>Easy to export:</p>
+    <pre><code class="python">
+learn.export("edogawa.pkl")
+    </code></pre>
+
+    <p>Next time I'll just load the learner using load_learner method:</p>
+
+    <pre><code class="python">
+learner = load_learner(path="models", file="edogawa.pkl")
+    </code></pre>
+
     <script>
       const string = document.getElementById('string');
       const result = document.getElementById('result');
@@ -82,12 +525,16 @@
       });
 
       document.getElementById('submit').addEventListener('click', () => {
-        const uri_base = `http://192.168.3.5`;
-        const params = `?string=${string.value}&n_words=${n_words.value}`;
-        const preds = fetch(uri_base + params)
+        const uri_base = `http://ec2-13-231-159-85.ap-northeast-1.compute.amazonaws.com`;
+        const _string = encodeURI(string.value);
+        const _n_words = n_words.value ? n_words.value : 30;
+        const params = `?string=${_string}&n_words=${_n_words}`;
+        fetch(uri_base + params)
           .then(res => res.text())
+          .then(res => {
+            result.innerText = res;
+          })
           .catch(err => alert(err));
-        result.innerText = preds;
       });
     </script>
   </body>
