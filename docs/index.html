@@ -39,16 +39,9 @@
         font-size: 120%;
         padding: 1%;
         margin: 1%;
-        width: 70%;
+        width: 100%;
         border: none;
         border-bottom: 2px ridge wheat;
-      }
-      #n_words {
-        font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
-        font-size: 120%;
-        padding: 1%;
-        margin: 1%;
-        width: 20%;
       }
       #submit {
         font-family: 'Merriweather', 'Sawarabi Mincho', sans-serif;
@@ -87,14 +80,6 @@
         name="string"
         id="string"
         placeholder="小説の書き出し・・・"
-      />
-      <input
-        type="number"
-        name="n_words"
-        id="n_words"
-        min="1"
-        max="100"
-        placeholder="＋追加文字数"
       />
       <button id="submit">小説を続ける</button>
     </div>
@@ -518,7 +503,6 @@ learner = load_learner(path="models", file="edogawa.pkl")
     <script>
       const string = document.getElementById('string');
       const result = document.getElementById('result');
-      const n_words = document.getElementById('n_words');
 
       string.addEventListener('input', () => {
         result.innerText = string.value;
@@ -527,8 +511,7 @@ learner = load_learner(path="models", file="edogawa.pkl")
       document.getElementById('submit').addEventListener('click', () => {
         const uri_base = `https://kznovo.duckdns.org/api1`;
         const _string = encodeURI(string.value);
-        const _n_words = n_words.value ? n_words.value : 30;
-        const params = `?string=${_string}&n_words=${_n_words}`;
+        const params = `?string=${_string}&n_words=30`;
         fetch(uri_base + params)
           .then(res => res.text())
           .then(res => {
