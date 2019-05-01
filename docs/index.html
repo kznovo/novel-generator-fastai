@@ -512,7 +512,7 @@ learner = load_learner(path="models", file="edogawa.pkl")
         const uri_base = `https://kznovo.duckdns.org/api1`;
         const _string = encodeURI(string.value);
         const params = `?string=${_string}&n_words=30`;
-        fetch(uri_base + params, { mode: 'cors' })
+        fetch(uri_base + params)
           .then(res => res.text())
           .then(res => {
             result.innerText = res;
