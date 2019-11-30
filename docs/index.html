@@ -509,7 +509,7 @@ learner = load_learner(path="models", file="edogawa.pkl")
       });
 
       document.getElementById('submit').addEventListener('click', () => {
-        const uri_base = `https://kznovo.duckdns.org/api1`;
+        const uri_base = `https://kznovo.duckdns.org:5001`;
         const _string = encodeURI(string.value);
         const params = `?string=${_string}&n_words=30`;
         fetch(uri_base + params)
