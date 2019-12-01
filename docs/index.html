@@ -214,26 +214,19 @@ df = pd.DataFrame(splitted_texts).drop_duplicates().reset_index(drop=True)
       >
       to perform tokenization on Japanese texts.
     </p>
+    <p>
+      Edit: 12/1/2019<br/>
+      mecab-python3 is currently not actively maintained. <a href="https://github.com/buruzaemon/natto-py" target="_blank" rel="noopener noreferre">natto-py</a> is a recommended module for mecab python wrapper.
+    </p>
     <pre><code class="python">
-import re
-import MeCab
+from natto import MeCab
 
-tagger = MeCab.Tagger("-Owakati")
+nm = MeCab()
 
 class MeCabTokenizer(BaseTokenizer):
-    def __init__(self, lang:str):
-        self.lang = 'ja'
-    
+    def __init__(self, lang:str): self.lang = 'ja'
     def add_special_cases(self, toks:Collection[str]): pass
-    
-    def tokenizer(self,raw_sentence):
-        result = tagger.parse(raw_sentence)
-        words = result.split()
-        if len(words) == 0:
-            return []
-        if words[-1] == "\n":
-            words = words[:-1]
-        return words
+    def tokenizer(self,raw_sentence): return [node.surface for node in nm.parse(raw_sentence, as_nodes=True)]
     </code></pre>
 
     <p>
@@ -486,7 +479,7 @@ learn.fit_one_cycle(16, 1e-02)
 learn.predict("二十面相", n_words=50)
     </code></pre>
     <pre><code class="plaintext">
-'二十面相 の やろ う は 、 三 百 三 十 センチ ぐらい しか ない ので 、 あいつ は 学校 に つく つもり だ 。 xxbos それ に 玉村 銀 一 君 は かくれ て しまっ た の です 。 xxbos そして 、 もし その 方法 が 、 それ が きっかけ に'
+'二十面相 は おち なく て も 、 ポスト の ばけ もの は 、 どこ へ あらわ れ た の か 、 けん とう も つき ませ ん 。 xxbos 克彦 は 、 三谷 青年 の 腕 を 降り て 家 を 出 た が 、 まもなく 一 週間 も たっ た'
     </code></pre>
 
     <p>Easy to export:</p>
@@ -503,13 +496,14 @@ learner = load_learner(path="models", file="edogawa.pkl")
     <script>
       const string = document.getElementById('string');
       const result = document.getElementById('result');
+      const submit = document.getElementById('submit');
 
       string.addEventListener('input', () => {
         result.innerText = string.value;
       });
 
-      document.getElementById('submit').addEventListener('click', () => {
-        const uri_base = `https://kznovo.duckdns.org:5001`;
+      submit.addEventListener('click', () => {
+        const uri_base = `https://kznovo.duckdns.org/api1`;
         const _string = encodeURI(string.value);
         const params = `?string=${_string}&n_words=30`;
         fetch(uri_base + params)
