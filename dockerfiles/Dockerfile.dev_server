@@ -1,0 +1,21 @@
+FROM python:3.7
+
+LABEL maintainer="kazuya.hatta@gmail.com"
+
+ARG requirements
+ARG port
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    mecab \
+    libmecab-dev \
+    mecab-ipadic-utf8 &&\
+    rm -rf /var/lib/apt/lists/*
+
+RUN mkdir /server
+WORKDIR /server
+
+COPY ${requirements} .
+RUN python3 -m pip install --upgrade pip setuptools wheel
+RUN python3 -m pip install -r `basename ${requirements}`
+
+EXPOSE ${port}

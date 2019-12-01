@@ -1,0 +1,41 @@
+#!/bin/sh -e
+
+BASEDIR="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+DOCKERFILE_PATH="${BASEDIR}/dockerfiles/Dockerfile.dev_server"
+REQUIREMENTS_PATH="requirements/requirements.server.txt"
+REQUIREMENTS_DEV_PATH="${BASEDIR}/requirements/requirements.server.dev.txt"
+SERVER_DIR="${BASEDIR}/server"
+MODEL_PATH="${BASEDIR}/edogawa.pkl"
+PORT="5001"
+IMAGE_NAME="novel-generator-fastai-dev-server"
+
+for f in ${DOCKERFILE_PATH} ${REQUIREMENTS_PATH}; do
+  if [ ! -f ${f} ]; then
+    echo "${f} does not exist"
+    exit 1
+  fi
+done
+
+[ "$(docker ps -a | grep ${IMAGE_NAME})" ] && docker kill ${IMAGE_NAME}
+
+docker build \
+  -f ${DOCKERFILE_PATH} \
+  -t ${IMAGE_NAME} \
+  --build-arg requirements=${REQUIREMENTS_PATH} \
+  --build-arg port=${PORT} \
+  ${BASEDIR}
+
+docker run \
+  -itd \
+  --rm \
+  --name=${IMAGE_NAME} \
+  -v ${SERVER_DIR}:/server \
+  -p ${PORT}:${PORT} \
+  ${IMAGE_NAME}
+
+echo "copying dev resources..."
+docker cp ${REQUIREMENTS_DEV_PATH} ${IMAGE_NAME}:/tmp/.
+docker cp ${MODEL_PATH} ${IMAGE_NAME}:/tmp/.
+docker exec -itd ${IMAGE_NAME} pip install -r /tmp/`basename ${REQUIREMENTS_DEV_PATH}`
+
+echo "run 'docker exec -it ${IMAGE_NAME} /bin/bash' to enter container"

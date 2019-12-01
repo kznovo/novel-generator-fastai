@@ -1,6 +1,6 @@
 FROM ubuntu:18.04
 
-LABEL maintainer Kazuya Hatta (kazuya.hatta@gmail.com)
+LABEL maintainer="kazuya.hatta@gmail.com"
 
 ARG requirements
 ARG cpu

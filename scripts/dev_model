@@ -1,9 +1,9 @@
 #!/bin/sh -e
 
 BASEDIR="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
-DOCKERFILE_PATH="${BASEDIR}/dockerfiles/Dockerfile.dev"
-REQUIREMENTS_PATH="requirements/dev"
-IMAGE_NAME="novel-generator-fastai-dev"
+DOCKERFILE_PATH="${BASEDIR}/dockerfiles/Dockerfile.dev_model"
+REQUIREMENTS_PATH="requirements/requirements.dev_model.txt"
+IMAGE_NAME="novel-generator-fastai-dev-model"
 CPU=1
 
 for f in ${DOCKERFILE_PATH} ${REQUIREMENTS_PATH}; do
