@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 BASEDIR="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
-DOCKERFILE_PATH="${BASEDIR}/dockerfiles/dev"
+DOCKERFILE_PATH="${BASEDIR}/dockerfiles/Dockerfile.dev"
 REQUIREMENTS_PATH="requirements/dev"
 IMAGE_NAME="novel-generator-fastai-dev"
 CPU=1
@@ -24,6 +24,6 @@ docker run \
   -it \
   --rm \
   --name=${IMAGE_NAME} \
-  -v ${BASEDIR}/dev:/home/dev \
+  -v ${BASEDIR}/dev:/home/dev/workspace \
   -p 8888:8888 \
   ${IMAGE_NAME}
