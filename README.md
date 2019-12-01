@@ -16,5 +16,5 @@ scripts/dev_deploy
 ### `scripts/dev_deploy [modelpath]`
 - start model server development container
 
-### `scripts/deploy [modelpath]`
+### [WIP] `scripts/deploy [modelpath]`
 - start model server container (serves model at `modelpath`; default `modelpath=./model.pkl`)

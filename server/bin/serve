@@ -1,0 +1,5 @@
+#!/bin/sh -e
+
+export MODEL_PATH=/tmp/edogawa.pkl
+
+python3 server

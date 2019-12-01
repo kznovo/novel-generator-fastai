@@ -3,3 +3,5 @@
 .ipynb_checkpoints
 .bash_history
 dev/data
+*.pyc
+*.egg-info
