@@ -1,0 +1,34 @@
+FROM ubuntu:18.04
+
+LABEL maintainer Kazuya Hatta (kazuya.hatta@gmail.com)
+
+ARG requirements
+ARG cpu
+
+RUN apt-get update && apt-get install -y \
+    sudo \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-venv \
+    mecab \
+    libmecab-dev \
+    mecab-ipadic-utf8
+
+RUN useradd -ms /bin/bash dev && \
+    adduser dev sudo && \
+    echo 'dev:dev' | chpasswd
+USER dev
+WORKDIR /home/dev
+
+ENV torch_pip_package="http://download.pytorch.org/whl/cpu/torch-1.0.0-cp36-cp36m-linux_x86_64.whl"
+ENV venv_path=/home/dev/venv
+COPY ${requirements} .
+RUN python3 -m venv ${venv_path} && \
+    ${venv_path}/bin/pip install --upgrade pip setuptools wheel
+RUN if [ ${cpu} = "1" ]; then ${venv_path}/bin/pip install ${torch_pip_package}; fi
+RUN ${venv_path}/bin/pip install -r `basename ${requirements}`
+RUN mkdir /home/dev/workspace
+
+EXPOSE 8888
+ENTRYPOINT ${venv_path}/bin/jupyter notebook --ip=0.0.0.0

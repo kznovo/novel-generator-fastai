@@ -1,5 +1,0 @@
-torch
-fastai
-starlette
-hypercorn
-mecab-python3

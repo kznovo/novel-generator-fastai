@@ -1,0 +1,29 @@
+#!/bin/sh -e
+
+BASEDIR="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
+DOCKERFILE_PATH="${BASEDIR}/dockerfiles/dev"
+REQUIREMENTS_PATH="requirements/dev"
+IMAGE_NAME="novel-generator-fastai-dev"
+CPU=1
+
+for f in ${DOCKERFILE_PATH} ${REQUIREMENTS_PATH}; do
+  if [ ! -f ${f} ]; then
+    echo "${f} does not exist"
+    exit 1
+  fi
+done
+
+docker build \
+  -f ${DOCKERFILE_PATH} \
+  -t ${IMAGE_NAME} \
+  --build-arg requirements=${REQUIREMENTS_PATH} \
+  --build-arg cpu=${CPU} \
+  ${BASEDIR}
+
+docker run \
+  -it \
+  --rm \
+  --name=${IMAGE_NAME} \
+  -v ${BASEDIR}/dev:/home/dev \
+  -p 8888:8888 \
+  ${IMAGE_NAME}

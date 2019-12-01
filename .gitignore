@@ -1,4 +1,4 @@
 *.pkl
-.mypy_cache
-venv
 .vscode
+.ipynb_checkpoints
+.bash_history
